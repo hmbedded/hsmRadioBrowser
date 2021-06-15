@@ -1,5 +1,5 @@
 /*
- * getServers.h
+ * radiobrowser.h
  *
  * Author: Howard Mitchell <hm@hmbedded.co.uk> Copyright 2021
  *
@@ -13,17 +13,11 @@
  * General Public License for more details.
  */
 
-#ifndef _GETSERVERS_H
-#define _GETSERVERS_H
+#ifndef _RADIO_BROWSER_H
+#define _RADIO_BROWSER_H
 
-typedef struct RadioBrowserServer {
-	struct RadioBrowserServer *prev;
-	struct RadioBrowserServer *next;
-	char *ipaddr;
-	char *name;
-} RadioBrowserServer;
+int initCurl(void);
+void cleanupCurl(void);
+int getRadioBrowserData(char *url, void *callback);
 
-int getServers(char* radioBrowser);
-
-#endif /* _GETSERVERS_H */
-
+#endif /* _RADIO_BROWSER_H */

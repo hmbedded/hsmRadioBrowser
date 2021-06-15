@@ -23,7 +23,7 @@
 
 #include "getservers.h"
 
-int getServers(char* name)
+int getServers(char* radioBrowser)
 {
 	struct addrinfo hints, *res, *p;
 	int status;
@@ -35,12 +35,12 @@ int getServers(char* name)
 	hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
 	hints.ai_socktype = SOCK_STREAM;
 	
-	if ((status = getaddrinfo(name, NULL, &hints, &res)) != 0) {
+	if ((status = getaddrinfo(radioBrowser, NULL, &hints, &res)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
 		return 2;
 	}
 
-	printf("IP addresses for %s:\n\n", name);
+	printf("IP addresses for %s:\n\n", radioBrowser);
 	
 	for(p = res;p != NULL; p = p->ai_next) {
 		void *addr;

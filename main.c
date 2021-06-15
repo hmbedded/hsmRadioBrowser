@@ -14,9 +14,16 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "menu.h"
 #include "getservers.h"
+#include "radiobrowser.h"
+
+typedef enum {
+	FALSE,
+	TRUE
+} bool;
 
 typedef struct {
 	RadioBrowserServer serverList;
@@ -97,13 +104,34 @@ int main(void)
 {
 	AppData appData;
 	Env env = &appData;
+	_Bool quit = FALSE;
+
+	/* Initialise the CURL library */
+	if (initCurl() < 0)
+		return -1;
+
+	/* Get servers for the radio browser database */
+	getServers("all.api.radio-browser.info");
 
 	/* Initialise static menus */
 	initMenus(env);
-
-	/* Display Main Menu */
 	env->currentMenu = mainMenu;
-	displayMenu(env);
+
+	/* Main Loop */
+	while(!quit) {
+		int ch;
+
+		/* Display Current Menu */
+		displayMenu(env);
+
+		/* Wait for user input */
+		ch = getchar();
+		if (ch == 'q')
+			quit = TRUE;
+	}
+
+	/* Cleanup CURL */
+	cleanupCurl();
 
 	return 0;
 }
