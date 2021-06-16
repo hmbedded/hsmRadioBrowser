@@ -17,14 +17,14 @@
 #include <unistd.h>
 #include <curl/curl.h>
 
-//~ size_t callback(void *buffer, size_t size, size_t nmemb, void *userp)
-//~ {
-	//~ printf("\n\twite_data: size = %ld\n", size);
-	//~ write(STDOUT_FILENO, buffer, nmemb);
-	//~ printf("\n");
+size_t callback(void *buffer, size_t size, size_t nmemb, void *userp)
+{
+	printf("\n\twite_data: size = %ld\n", size);
+	write(STDOUT_FILENO, buffer, nmemb);
+	printf("\n");
 
-	//~ return nmemb;
-//~ }
+	return nmemb;
+}
 
 int initCurl(void)
 {
@@ -44,7 +44,7 @@ void cleanupCurl(void)
 	curl_global_cleanup();
 }
 
-int getRadioBrowserData(char *url, void *callback)
+int getRadioBrowserData(char *url)
 {
 	CURL *curl;
 	CURLcode res;

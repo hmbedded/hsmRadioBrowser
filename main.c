@@ -36,6 +36,8 @@ typedef AppData* Env;
 static void searchByCountry(void *arg)
 {
 	printf("searchByCountry: called\n");
+
+	getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries");
 }
 
 static void searchByGenre(void *arg)
