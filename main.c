@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "menu.h"
@@ -34,36 +35,44 @@ typedef AppData* Env;
 
 static void searchByCountry(void *arg)
 {
+	printf("searchByCountry: called\n");
 }
 
 static void searchByGenre(void *arg)
 {
+	printf("searchByGenre: called\n");
 }
 
 static void selectWifi(void *arg)
 {
+	printf("selectWifi: called\n");
 }
 
 static void editWifiPassword(void *arg)
 {
+	printf("editWifiPassword: called\n");
 }
+
+extern MenuItem mainMenu[];
+extern MenuItem settingsMenu[];
 
 /* Main Menu */
 MenuItem mainMenu[] = {
-	{ "Search By Country", searchByCountry },
-	{ "Search By Genre"  , searchByGenre   },
-	{ "Settings"         , NULL            },
+	{ "Search By Country", searchByCountry, NULL, NULL         },
+	{ "Search By Genre"  , searchByGenre  , NULL, NULL         },
+	{ "Settings"         , NULL           , NULL, settingsMenu },
 	{ NULL }
 };
 
 /* Settings Menu */
 MenuItem settingsMenu[] = {
-	{ "Select Wifi", selectWifi },
-	{ "Edit Wifi Password", editWifiPassword },
+	{ "Select Wifi"       , selectWifi      , NULL, NULL     },
+	{ "Edit Wifi Password", editWifiPassword, NULL, NULL     },
+	{ "Back"              , NULL            , mainMenu, NULL },
 	{ NULL }
 }; 
 
-static void initMenu(Menu menu, Menu parent, Env env)
+static void initMenu(Menu menu, Env env)
 {
 	MenuItem *item = menu;
 	int i = 1;
@@ -74,7 +83,6 @@ static void initMenu(Menu menu, Menu parent, Env env)
 	while (item[i].mText != NULL) {
 		item[i].prev = &item[i-1];
 		item[i].next = &item[i+1];
-		item[i].parent = parent;
 		item[i].arg = env;
 		i++;
 	}
@@ -84,8 +92,8 @@ static void initMenu(Menu menu, Menu parent, Env env)
 
 static void initMenus(Env env)
 {
-	initMenu(mainMenu, NULL, env);
-	initMenu(settingsMenu, NULL, env);
+	initMenu(mainMenu, env);
+	initMenu(settingsMenu, env);
 }
 
 static void displayMenu(Env env)
@@ -98,6 +106,20 @@ static void displayMenu(Env env)
 		i++;
 		item = item->next;
 	} 
+}
+
+MenuItem *getMenuItem(Menu menu, int idx)
+{
+	MenuItem *item = menu;
+	int i;
+
+	for (i=1; i<idx; i++) {
+		item = item->next;
+		if (item == NULL)
+			break;
+	}
+
+	return item;
 }
 
 int main(void)
@@ -119,15 +141,35 @@ int main(void)
 
 	/* Main Loop */
 	while(!quit) {
-		int ch;
+		char *input;
+		int selection;
+		MenuItem *item;
 
 		/* Display Current Menu */
+		printf("\n");
 		displayMenu(env);
 
 		/* Wait for user input */
-		ch = getchar();
-		if (ch == 'q')
+		printf ("\nSelection: ");
+		scanf("%ms", &input);
+		printf("\nUser Input: %s\n", input);
+		if (input[0] == 'q') {
 			quit = TRUE;
+			continue;
+		}
+
+		/* Action user selection */
+		selection = atoi(input);
+		free(input);
+		if (selection != 0) {
+			item = getMenuItem(env->currentMenu, selection);
+			if (item->child)
+				env->currentMenu = item->child;
+			else if (item->mFunc)
+				item->mFunc(env);
+			else if (item->parent)
+				env->currentMenu = item->parent;
+		}
 	}
 
 	/* Cleanup CURL */
