@@ -18,6 +18,6 @@
 
 int initCurl(void);
 void cleanupCurl(void);
-int getRadioBrowserData(char *url);
+int getRadioBrowserData(char *url, void *callback);
 
 #endif /* _RADIO_BROWSER_H */
