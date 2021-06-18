@@ -1,6 +1,8 @@
 CFLAGS += -Wall
 CFLAGS += $(shell pkg-config --cflags libcurl)
 LDFLAGS += $(shell pkg-config --libs libcurl)
+CFLAGS += $(shell pkg-config --cflags json-c)
+LDFLAGS += $(shell pkg-config --libs json-c)
 
 BINARY = hsmRadioBrowser
 

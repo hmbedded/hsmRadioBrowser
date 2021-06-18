@@ -14,14 +14,44 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <curl/curl.h>
+#include <json.h>
+
+char *curlbuffer = NULL;
+size_t bufsize = 0;
+size_t offset = 0;
 
 size_t callback(void *buffer, size_t size, size_t nmemb, void *userp)
 {
-	printf("\n\twite_data: size = %ld\n", size);
-	write(STDOUT_FILENO, buffer, nmemb);
-	printf("\n");
+	json_object *countries_jobj;
+	int i;
+
+	printf("\n\twrite_data: size = %ld, nmemb = %ld\n", size, nmemb);
+
+	bufsize += nmemb;
+	curlbuffer = realloc(curlbuffer, bufsize);
+	memcpy(curlbuffer+offset, buffer, nmemb);
+	offset += nmemb;
+
+	countries_jobj = json_tokener_parse(curlbuffer);
+	if (countries_jobj == NULL) {
+		printf("Parsing Incomplete\n");
+		return nmemb;
+	}
+
+//	printf("%s\n", json_object_to_json_string(countries_jobj));
+	printf("\nObject Type: %s\n", json_type_to_name(json_object_get_type(countries_jobj)));
+	printf("Array length: %d\n", json_object_array_length(countries_jobj));
+	for (i = 0; i<json_object_array_length(countries_jobj); i++) {
+		json_object *country_jobj;
+		json_object *name_jobj;
+
+		country_jobj = json_object_array_get_idx(countries_jobj, i);
+		json_object_object_get_ex(country_jobj, "name", &name_jobj);
+		printf("%s\n", json_object_get_string(name_jobj));
+	}
 
 	return nmemb;
 }
