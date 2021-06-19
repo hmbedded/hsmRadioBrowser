@@ -70,7 +70,7 @@ static void searchByCountry(void *arg)
 {
 	printf("searchByCountry: called\n");
 
-	getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries", getCountries_cb);
+	getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries", getCountries_cb, arg);
 }
 
 static void searchByGenre(void *arg)

@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <curl/curl.h>
 
+#include "hsmbrowser.h"
+
 int initCurl(void)
 {
 	CURLcode res;
@@ -35,7 +37,7 @@ void cleanupCurl(void)
 	curl_global_cleanup();
 }
 
-int getRadioBrowserData(char *url, void* callback)
+int getRadioBrowserData(char *url, void* callback, void *arg)
 {
 	CURL *curl;
 	CURLcode res;

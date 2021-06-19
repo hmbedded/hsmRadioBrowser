@@ -18,6 +18,7 @@
 
 #include "menu.h"
 #include "getservers.h"
+#include "radiobrowser.h"
 
 typedef struct {
 	RadioBrowserServer serverList;
