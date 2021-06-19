@@ -1,5 +1,5 @@
 /*
- * menu.h
+ * hsmbrowser.h
  *
  * Author: Howard Mitchell <hm@hmbedded.co.uk> Copyright 2021
  *
@@ -13,19 +13,17 @@
  * General Public License for more details.
  */
 
-#ifndef _MENU_H
-#define _MENU_H
+#ifndef _HSMBROWSER_H
+#define _HSMBROWSER_H
 
-typedef struct MenuItem {
-	char *mText;                // Menu text
-	void (*mFunc)(void*);       // Function to call when selected
-	struct MenuItem *parent;    // Parent menu
-	struct MenuItem *child;     // Child menu
-	struct MenuItem *prev;      // Previous menu item (NULL if first)
-	struct MenuItem *next;      // Next menu item (NULL if last)
-	void *arg;                  // Argument passed to mFunc
-} MenuItem;
+#include "menu.h"
+#include "getservers.h"
 
-typedef MenuItem* Menu;
+typedef struct {
+	RadioBrowserServer serverList;
+	Menu currentMenu;
+} AppData;
 
-#endif /* MENU_H */
+typedef AppData* Env;
+
+#endif /* HSMBROWSER_H */

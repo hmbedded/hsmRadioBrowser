@@ -1,5 +1,5 @@
 /*
- * main.c
+ * hsmbrowser.c
  *
  * Author: Howard Mitchell <hm@hmbedded.co.uk> Copyright 2021
  *
@@ -13,22 +13,16 @@
  * General Public License for more details.
  */
 
+#include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <json.h>
 
-#include "menu.h"
+#include "hsmbrowser.h"
 #include "getservers.h"
+#include "menu.h"
 #include "radiobrowser.h"
-
-typedef struct {
-	RadioBrowserServer serverList;
-	Menu currentMenu;
-} AppData;
-
-typedef AppData* Env;
 
 char *curlbuffer = NULL;
 size_t bufsize = 0;
