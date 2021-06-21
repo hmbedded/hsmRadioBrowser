@@ -14,7 +14,8 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <curl/curl.h>
 
 #include "hsmbrowser.h"
@@ -37,26 +38,50 @@ void cleanupCurl(void)
 	curl_global_cleanup();
 }
 
-int getRadioBrowserData(char *url, void* callback, void *arg)
+static size_t curl_cb(void *buffer, size_t size, size_t nmemb, void *userp)
+{
+	size_t sizeBytes = size * nmemb;
+	size_t outbufsize;
+	char **outbuf = userp;
+
+	outbufsize = (*outbuf == NULL) ? 0 : strlen(*outbuf);
+	*outbuf = realloc(*outbuf, outbufsize + sizeBytes + 1);
+	if (*outbuf == NULL)
+		return 0;
+	memcpy((*outbuf)+outbufsize, buffer, sizeBytes);
+	(*outbuf)[outbufsize + sizeBytes] = 0;
+
+	return sizeBytes;
+}
+
+
+char* getRadioBrowserData(char *url)
 {
 	CURL *curl;
 	CURLcode res;
+	char *browserdata = NULL;
 
 	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback); 
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_cb);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &browserdata);
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
 		/* Check for errors */
-		if(res != CURLE_OK)
-		  fprintf(stderr, "curl_easy_perform() failed: %s\n",
-				  curl_easy_strerror(res));
+		if(res != CURLE_OK) {
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+			return NULL;
+		}
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
+	else {
+		fprintf(stderr, "curl_easy_init() return NULL\n");
+		return NULL;
+	}
 
-	return 0;
+	return browserdata;
 }

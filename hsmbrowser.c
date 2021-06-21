@@ -16,8 +16,6 @@
 #include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "hsmbrowser.h"
 #include "getservers.h"
@@ -28,32 +26,23 @@ char *curlbuffer = NULL;
 size_t bufsize = 0;
 size_t offset = 0;
 
-static size_t getCountries_cb(void *buffer, size_t size, size_t nmemb, void *userp)
+static void searchByCountry(void *arg)
 {
+	char *browserData;
 	json_object *countries_jobj;
 	int i;
+	enum json_tokener_error jerr;
 
-	printf("\n\twrite_data: size = %ld, nmemb = %ld\n", size, nmemb);
+	/* Get list of countries from radio-browser in JSON format */ 
+	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries");
 
-	bufsize += nmemb;
-	curlbuffer = realloc(curlbuffer, bufsize);
-	memcpy(curlbuffer+offset, buffer, nmemb);
-	offset += nmemb;
-
-	countries_jobj = json_tokener_parse(curlbuffer);
+	/* Parse the returned JSON string */
+	countries_jobj = json_tokener_parse_verbose(browserData, &jerr);
 	if (countries_jobj == NULL) {
-		printf("Parsing Incomplete\n");
-		return nmemb;
+		fprintf(stderr, "Json Tokener error: %s\n", json_tokener_error_desc(jerr));
 	}
-	
-	free(curlbuffer);
-	curlbuffer = NULL;
-	bufsize = 0;
-	offset = 0;
 
-//	printf("%s\n", json_object_to_json_string(countries_jobj));
-	printf("\nObject Type: %s\n", json_type_to_name(json_object_get_type(countries_jobj)));
-	printf("Array length: %d\n", json_object_array_length(countries_jobj));
+	/* Print out the list of countries */
 	for (i = 0; i<json_object_array_length(countries_jobj); i++) {
 		json_object *country_jobj;
 		json_object *name_jobj;
@@ -62,15 +51,6 @@ static size_t getCountries_cb(void *buffer, size_t size, size_t nmemb, void *use
 		json_object_object_get_ex(country_jobj, "name", &name_jobj);
 		printf("%s\n", json_object_get_string(name_jobj));
 	}
-
-	return nmemb;
-}
-
-static void searchByCountry(void *arg)
-{
-	printf("searchByCountry: called\n");
-
-	getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries", getCountries_cb, arg);
 }
 
 static void searchByGenre(void *arg)
