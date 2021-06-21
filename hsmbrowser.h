@@ -16,6 +16,8 @@
 #ifndef _HSMBROWSER_H
 #define _HSMBROWSER_H
 
+#include <json.h>
+
 #include "menu.h"
 #include "getservers.h"
 #include "radiobrowser.h"
@@ -23,6 +25,12 @@
 typedef struct {
 	RadioBrowserServer serverList;
 	Menu currentMenu;
+	Menu mainMenu;
+	Menu settingsMenu;
+	Menu countryListMenu;
+	Menu parentMenu;
+	json_object *country_list_jobj;
+	int selection;
 } AppData;
 
 typedef AppData* Env;

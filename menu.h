@@ -17,7 +17,7 @@
 #define _MENU_H
 
 typedef struct MenuItem {
-	char *mText;                // Menu text
+	const char *mText;          // Menu text
 	void (*mFunc)(void*);       // Function to call when selected
 	struct MenuItem *parent;    // Parent menu
 	struct MenuItem *child;     // Child menu

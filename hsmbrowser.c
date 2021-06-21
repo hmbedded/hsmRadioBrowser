@@ -16,20 +16,34 @@
 #include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "hsmbrowser.h"
 #include "getservers.h"
 #include "menu.h"
 #include "radiobrowser.h"
 
-char *curlbuffer = NULL;
-size_t bufsize = 0;
-size_t offset = 0;
+static void countrySelected(void *arg)
+{
+	Env env = arg;
+	json_object *country_jobj;
+	json_object *name_jobj;
+
+	country_jobj = json_object_array_get_idx(env->country_list_jobj, env->selection-1);
+	json_object_object_get_ex(country_jobj, "name", &name_jobj);
+	printf("\ncountrySelected: %d  %s\n", env->selection, json_object_get_string(name_jobj));
+
+	if (env->parentMenu)
+		env->currentMenu = env->parentMenu;
+	else
+		env->currentMenu = env->mainMenu;
+}
 
 static void searchByCountry(void *arg)
 {
+	Env env = arg;
+	MenuItem *countryListItem = env->countryListMenu;
 	char *browserData;
-	json_object *countries_jobj;
 	int i;
 	enum json_tokener_error jerr;
 
@@ -37,20 +51,37 @@ static void searchByCountry(void *arg)
 	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries");
 
 	/* Parse the returned JSON string */
-	countries_jobj = json_tokener_parse_verbose(browserData, &jerr);
-	if (countries_jobj == NULL) {
+	env->country_list_jobj = json_tokener_parse_verbose(browserData, &jerr);
+	if (env->country_list_jobj == NULL) {
 		fprintf(stderr, "Json Tokener error: %s\n", json_tokener_error_desc(jerr));
 	}
 
-	/* Print out the list of countries */
-	for (i = 0; i<json_object_array_length(countries_jobj); i++) {
+	/* Build Location Menu */
+	for (i = 0; i<json_object_array_length(env->country_list_jobj); i++) {
 		json_object *country_jobj;
 		json_object *name_jobj;
+		MenuItem *item;
 
-		country_jobj = json_object_array_get_idx(countries_jobj, i);
+		country_jobj = json_object_array_get_idx(env->country_list_jobj, i);
 		json_object_object_get_ex(country_jobj, "name", &name_jobj);
-		printf("%s\n", json_object_get_string(name_jobj));
+		item = malloc(sizeof(MenuItem));
+		item->mText = json_object_get_string(name_jobj);
+		item->mFunc = countrySelected;
+		item->parent = env->mainMenu;
+		item->child = NULL;
+		item->next = NULL;
+		if (countryListItem) {
+			countryListItem->next = item;
+			item->prev = countryListItem;
+		}
+		else {
+			item->prev = NULL;
+			env->countryListMenu = item;
+		}
+		countryListItem = item;
 	}
+
+	env->currentMenu = env->countryListMenu;
 }
 
 static void searchByGenre(void *arg)
@@ -109,6 +140,8 @@ static void initMenus(Env env)
 {
 	initMenu(mainMenu, env);
 	initMenu(settingsMenu, env);
+	env->mainMenu = mainMenu;
+	env->settingsMenu = settingsMenu;
 }
 
 static void displayMenu(Env env)
@@ -142,6 +175,9 @@ int main(void)
 	AppData appData;
 	Env env = &appData;
 	_Bool quit = FALSE;
+
+	/* Intialise app data */
+	memset(env, 0, sizeof(AppData));
 
 	/* Initialise the CURL library */
 	if (initCurl() < 0)
@@ -180,8 +216,11 @@ int main(void)
 			item = getMenuItem(env->currentMenu, selection);
 			if (item->child)
 				env->currentMenu = item->child;
-			else if (item->mFunc)
+			else if (item->mFunc) {
+				env->selection = selection;
+				env->parentMenu = item->parent;
 				item->mFunc(env);
+			}
 			else if (item->parent)
 				env->currentMenu = item->parent;
 		}
