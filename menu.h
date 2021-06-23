@@ -28,4 +28,11 @@ typedef struct MenuItem {
 
 typedef MenuItem* Menu;
 
+typedef struct LocationMenuItem {
+	MenuItem menuItem;
+	const char *countryCode;
+} LocationMenuItem;
+
+typedef LocationMenuItem* LocationMenu;
+
 #endif /* MENU_H */

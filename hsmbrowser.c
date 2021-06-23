@@ -18,20 +18,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "hsmbrowser.h"
+#include "countrytable.h"
 #include "getservers.h"
+#include "hsmbrowser.h"
 #include "menu.h"
 #include "radiobrowser.h"
 
-static void countrySelected(void *arg)
+static void locationSelected(void *arg)
 {
 	Env env = arg;
-	json_object *country_jobj;
+	json_object *countrycode_jobj;
 	json_object *name_jobj;
 
-	country_jobj = json_object_array_get_idx(env->country_list_jobj, env->selection-1);
-	json_object_object_get_ex(country_jobj, "name", &name_jobj);
-	printf("\ncountrySelected: %d  %s\n", env->selection, json_object_get_string(name_jobj));
+	countrycode_jobj = json_object_array_get_idx(env->countrycode_list_jobj, env->selection-1);
+	json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
+	printf("\ncountrySelected: %d  %s\n", env->selection, getCountryName(json_object_get_string(name_jobj)));
 
 	if (env->parentMenu)
 		env->currentMenu = env->parentMenu;
@@ -42,46 +43,49 @@ static void countrySelected(void *arg)
 static void searchByCountry(void *arg)
 {
 	Env env = arg;
-	MenuItem *countryListItem = env->countryListMenu;
+	LocationMenuItem *countryListItem = env->locationMenu;
 	char *browserData;
 	int i;
 	enum json_tokener_error jerr;
 
 	/* Get list of countries from radio-browser in JSON format */ 
-	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countries");
+	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countrycodes");
 
 	/* Parse the returned JSON string */
-	env->country_list_jobj = json_tokener_parse_verbose(browserData, &jerr);
-	if (env->country_list_jobj == NULL) {
+	env->countrycode_list_jobj = json_tokener_parse_verbose(browserData, &jerr);
+	if (env->countrycode_list_jobj == NULL) {
 		fprintf(stderr, "Json Tokener error: %s\n", json_tokener_error_desc(jerr));
 	}
 
 	/* Build Location Menu */
-	for (i = 0; i<json_object_array_length(env->country_list_jobj); i++) {
-		json_object *country_jobj;
+	for (i = 0; i<json_object_array_length(env->countrycode_list_jobj); i++) {
+		json_object *countrycode_jobj;
 		json_object *name_jobj;
+		LocationMenuItem *loc_item;
 		MenuItem *item;
 
-		country_jobj = json_object_array_get_idx(env->country_list_jobj, i);
-		json_object_object_get_ex(country_jobj, "name", &name_jobj);
-		item = malloc(sizeof(MenuItem));
-		item->mText = json_object_get_string(name_jobj);
-		item->mFunc = countrySelected;
+		countrycode_jobj = json_object_array_get_idx(env->countrycode_list_jobj, i);
+		json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
+		loc_item = malloc(sizeof(LocationMenuItem));
+		item = (MenuItem*)loc_item;
+		loc_item->countryCode = json_object_get_string(name_jobj);
+		item->mText = getCountryName(loc_item->countryCode);
+		item->mFunc = locationSelected;
 		item->parent = env->mainMenu;
 		item->child = NULL;
 		item->next = NULL;
 		if (countryListItem) {
-			countryListItem->next = item;
-			item->prev = countryListItem;
+			countryListItem->menuItem.next = item;
+			item->prev = (MenuItem*)countryListItem;
 		}
 		else {
 			item->prev = NULL;
-			env->countryListMenu = item;
+			env->locationMenu = (LocationMenu)item;
 		}
-		countryListItem = item;
+		countryListItem = loc_item;
 	}
 
-	env->currentMenu = env->countryListMenu;
+	env->currentMenu = (Menu)env->locationMenu;
 }
 
 static void searchByGenre(void *arg)
@@ -179,6 +183,9 @@ int main(void)
 	/* Intialise app data */
 	memset(env, 0, sizeof(AppData));
 
+	/* Initialise the Country Table (iso31660-1) */
+	initCountryTable();
+
 	/* Initialise the CURL library */
 	if (initCurl() < 0)
 		return -1;
@@ -225,6 +232,9 @@ int main(void)
 				env->currentMenu = item->parent;
 		}
 	}
+
+	/* Cleanup Country Table */
+	cleanupCountryTable();
 
 	/* Cleanup CURL */
 	cleanupCurl();

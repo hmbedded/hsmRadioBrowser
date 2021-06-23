@@ -1,5 +1,5 @@
 /*
- * hsmbrowser.h
+ * countrytable.h
  *
  * Author: Howard Mitchell <hm@hmbedded.co.uk> Copyright 2021
  *
@@ -13,26 +13,11 @@
  * General Public License for more details.
  */
 
-#ifndef _HSMBROWSER_H
-#define _HSMBROWSER_H
+#ifndef _COUNTRYTABLE_H
+#define _COUNTRYTABLE_H
 
-#include <json.h>
+int initCountryTable(void);
+const char* getCountryName(const char *code);
+void cleanupCountryTable(void);
 
-#include "menu.h"
-#include "getservers.h"
-#include "radiobrowser.h"
-
-typedef struct {
-	RadioBrowserServer serverList;
-	Menu currentMenu;
-	Menu mainMenu;
-	Menu settingsMenu;
-	LocationMenu locationMenu;
-	Menu parentMenu;
-	json_object *countrycode_list_jobj;
-	int selection;
-} AppData;
-
-typedef AppData* Env;
-
-#endif /* HSMBROWSER_H */
+#endif /* _COUNTRYTABLE_H */
