@@ -34,7 +34,7 @@ typedef MenuData* MenuEnv;
 static MenuData menuData;
 static MenuEnv menuEnv = &menuData;
 
-/* Menu Function Prototypes*/
+/* Menu Action Function Prototypes*/
 static void searchByCountry(void);
 static void searchByGenre(void);
 static void selectWifi(void);
@@ -59,6 +59,16 @@ static MenuItem settingsMenu[] = {
 	{ "Edit Wifi Password", editWifiPassword, NULL    , NULL, SETTINGSMENU_ITEM(0), SETTINGSMENU_ITEM(2) },
 	{ "Back"              , NULL            , mainMenu, NULL, SETTINGSMENU_ITEM(1), NULL                 },
 }; 
+
+static void addMenuItem(MenuItem *item, const char *mText, void *mFunc, Menu parent, Menu child, MenuItem *prev, MenuItem *next)
+{
+	item->mText = mText;
+	item->mFunc = mFunc;
+	item->parent = parent;
+	item->child = child;
+	item->prev = prev;
+	item->next = next;
+}
 
 static void locationSelected()
 {
@@ -97,25 +107,22 @@ static void searchByCountry()
 		json_object *name_jobj;
 		LocationMenuItem *loc_item;
 		MenuItem *item;
+		MenuItem *prev;
 
 		countrycode_jobj = json_object_array_get_idx(menuEnv->countrycode_list_jobj, i);
 		json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
 		loc_item = malloc(sizeof(LocationMenuItem));
 		item = (MenuItem*)loc_item;
 		loc_item->countryCode = json_object_get_string(name_jobj);
-		item->mText = getCountryName(loc_item->countryCode);
-		item->mFunc = locationSelected;
-		item->parent = mainMenu;
-		item->child = NULL;
-		item->next = NULL;
 		if (countryListItem) {
 			countryListItem->menuItem.next = item;
-			item->prev = (MenuItem*)countryListItem;
+			prev = (MenuItem*)countryListItem;
 		}
 		else {
-			item->prev = NULL;
+			prev = NULL;
 			menuEnv->locationMenu = (LocationMenu)item;
 		}
+		addMenuItem(item, getCountryName(loc_item->countryCode), locationSelected, mainMenu, NULL, prev, NULL);
 		countryListItem = loc_item;
 	}
 
