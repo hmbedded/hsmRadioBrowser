@@ -18,12 +18,11 @@
 
 typedef struct MenuItem {
 	const char *mText;          // Menu text
-	void (*mFunc)(void*);       // Function to call when selected
+	void (*mFunc)();            // Function to call when selected
 	struct MenuItem *parent;    // Parent menu
 	struct MenuItem *child;     // Child menu
 	struct MenuItem *prev;      // Previous menu item (NULL if first)
 	struct MenuItem *next;      // Next menu item (NULL if last)
-	void *arg;                  // Argument passed to mFunc
 } MenuItem;
 
 typedef MenuItem* Menu;
@@ -34,5 +33,11 @@ typedef struct LocationMenuItem {
 } LocationMenuItem;
 
 typedef LocationMenuItem* LocationMenu;
+
+void initMenu(void);
+void displayCurrentMenu(void);
+MenuItem *getCurrentMenuItem(int idx);
+void selectMenu(Menu menu);
+void actionMenuItem(MenuItem *mItem, int idx);
 
 #endif /* MENU_H */

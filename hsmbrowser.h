@@ -24,13 +24,6 @@
 
 typedef struct {
 	RadioBrowserServer serverList;
-	Menu currentMenu;
-	Menu mainMenu;
-	Menu settingsMenu;
-	LocationMenu locationMenu;
-	Menu parentMenu;
-	json_object *countrycode_list_jobj;
-	int selection;
 } AppData;
 
 typedef AppData* Env;
