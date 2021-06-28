@@ -70,6 +70,18 @@ static void addMenuItem(MenuItem *item, const char *mText, void *mFunc, Menu par
 	item->next = next;
 }
 
+static void removeMenu(Menu menu)
+{
+	MenuItem *item = menu;
+	MenuItem *next;
+
+	while (item) {
+		next = item->next;
+		free(item);
+		item = next;
+	}
+}
+
 static void locationSelected()
 {
 	json_object *countrycode_jobj;
@@ -87,10 +99,22 @@ static void locationSelected()
 
 static void searchByCountry()
 {
-	LocationMenuItem *countryListItem = menuEnv->locationMenu;
+	LocationMenuItem *countryListItem = NULL;
 	char *browserData;
 	int i;
 	enum json_tokener_error jerr;
+
+	/* Clear the current menu */
+	if (menuEnv->locationMenu) {
+		removeMenu((Menu)menuEnv->locationMenu);
+		menuEnv->locationMenu = NULL;
+	}
+
+	/* Clear the current country code list JSON object */
+	if (menuEnv->countrycode_list_jobj) {
+		json_object_put(menuEnv->countrycode_list_jobj);
+		menuEnv->countrycode_list_jobj = NULL;
+	}
 
 	/* Get list of countries from radio-browser in JSON format */ 
 	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countrycodes");
@@ -125,8 +149,10 @@ static void searchByCountry()
 		addMenuItem(item, getCountryName(loc_item->countryCode), locationSelected, mainMenu, NULL, prev, NULL);
 		countryListItem = loc_item;
 	}
-
 	menuEnv->currentMenu = (Menu)menuEnv->locationMenu;
+
+	/* Free browserData */
+	free(browserData);
 }
 
 static void searchByGenre()
