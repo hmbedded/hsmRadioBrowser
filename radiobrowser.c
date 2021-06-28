@@ -66,6 +66,7 @@ char* getRadioBrowserData(char *url)
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &browserdata);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "HsmRadioBrowser/0.1");
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
