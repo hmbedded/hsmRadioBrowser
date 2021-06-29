@@ -25,8 +25,10 @@ typedef struct {
 	Menu currentMenu;
 	Menu settingsMenu;
 	LocationMenu locationMenu;
+	Menu listStationsByCountryMenu;
 	Menu parentMenu;
 	json_object *countrycode_list_jobj;
+	json_object *stationsbycountry_list_jobj;
 	int selection;
 } MenuData;
 typedef MenuData* MenuEnv;
@@ -82,19 +84,84 @@ static void removeMenu(Menu menu)
 	}
 }
 
-static void locationSelected()
+static void playRadioStation()
 {
-	json_object *countrycode_jobj;
+	json_object *station_jobj;
 	json_object *name_jobj;
+	json_object *codec_jobj;
+	json_object *bitrate_jobj;
 
-	countrycode_jobj = json_object_array_get_idx(menuEnv->countrycode_list_jobj, menuEnv->selection-1);
-	json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
-	printf("\ncountrySelected: %d  %s\n", menuEnv->selection, getCountryName(json_object_get_string(name_jobj)));
+	station_jobj = json_object_array_get_idx(menuEnv->stationsbycountry_list_jobj, menuEnv->selection-1);
+	json_object_object_get_ex(station_jobj, "name", &name_jobj);
+	json_object_object_get_ex(station_jobj, "codec", &codec_jobj);
+	json_object_object_get_ex(station_jobj, "bitrate", &bitrate_jobj);
+	printf("\nStation selected: %d  %s - %s - %dkbps\n", menuEnv->selection, json_object_get_string(name_jobj), json_object_get_string(codec_jobj), json_object_get_int(bitrate_jobj));
 
 	if (menuEnv->parentMenu)
 		menuEnv->currentMenu = menuEnv->parentMenu;
 	else
 		menuEnv->currentMenu = mainMenu;
+}
+
+static void listStationsByCountry()
+{
+	json_object *countrycode_jobj;
+	json_object *name_jobj;
+	MenuItem *stationListItem = NULL;
+	char *browserData;
+	int i;
+	enum json_tokener_error jerr;
+
+	countrycode_jobj = json_object_array_get_idx(menuEnv->countrycode_list_jobj, menuEnv->selection-1);
+	json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
+	printf("\ncountrySelected: %d  %s\n", menuEnv->selection, getCountryName(json_object_get_string(name_jobj)));
+
+	/* Clear the current menu */
+	if (menuEnv->listStationsByCountryMenu) {
+		removeMenu(menuEnv->listStationsByCountryMenu);
+		menuEnv->listStationsByCountryMenu = NULL;
+	}
+
+	/* Clear the current station by country list JSON object */
+	if (menuEnv->stationsbycountry_list_jobj) {
+		json_object_put(menuEnv->stationsbycountry_list_jobj);
+		menuEnv->stationsbycountry_list_jobj = NULL;
+	}
+
+	/* Get list of countries from radio-browser in JSON format */ 
+	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/stations/bycountrycodeexact/gb");
+
+	/* Parse the returned JSON string */
+	menuEnv->stationsbycountry_list_jobj = json_tokener_parse_verbose(browserData, &jerr);
+	if (menuEnv->stationsbycountry_list_jobj == NULL) {
+		fprintf(stderr, "Json Tokener error: %s\n", json_tokener_error_desc(jerr));
+	}
+
+	/* Build Stations By Country Menu */
+	for (i = 0; i<json_object_array_length(menuEnv->stationsbycountry_list_jobj); i++) {
+		json_object *station_jobj;
+		json_object *name_jobj;
+		MenuItem *item;
+		MenuItem *prev;
+
+		station_jobj = json_object_array_get_idx(menuEnv->stationsbycountry_list_jobj, i);
+		json_object_object_get_ex(station_jobj, "name", &name_jobj);
+		item = malloc(sizeof(MenuItem));
+		if (stationListItem) {
+			stationListItem->next = item;
+			prev = stationListItem;
+		}
+		else {
+			prev = NULL;
+			menuEnv->listStationsByCountryMenu = item;
+		}
+		addMenuItem(item, json_object_get_string(name_jobj), playRadioStation, mainMenu, NULL, prev, NULL);
+		stationListItem = item;
+	}
+	menuEnv->currentMenu = (Menu)menuEnv->listStationsByCountryMenu;
+
+	/* Free browserData */
+	free(browserData);
 }
 
 static void searchByCountry()
@@ -146,7 +213,7 @@ static void searchByCountry()
 			prev = NULL;
 			menuEnv->locationMenu = (LocationMenu)item;
 		}
-		addMenuItem(item, getCountryName(loc_item->countryCode), locationSelected, mainMenu, NULL, prev, NULL);
+		addMenuItem(item, getCountryName(loc_item->countryCode), listStationsByCountry, mainMenu, NULL, prev, NULL);
 		countryListItem = loc_item;
 	}
 	menuEnv->currentMenu = (Menu)menuEnv->locationMenu;
