@@ -25,7 +25,7 @@ typedef struct {
 	Menu currentMenu;
 	Menu settingsMenu;
 	LocationMenu locationMenu;
-	Menu listStationsByCountryMenu;
+	StationsByCountryMenu listStationsByCountryMenu;
 	Menu parentMenu;
 	json_object *countrycode_list_jobj;
 	json_object *stationsbycountry_list_jobj;
@@ -49,21 +49,22 @@ static MenuItem settingsMenu[];
 /* Main Menu */
 #define MAINMENU_ITEM(x) &mainMenu[x]
 static MenuItem mainMenu[] = {
-	{ "Search By Country", searchByCountry, NULL, NULL        , NULL            , MAINMENU_ITEM(1) },
-	{ "Search By Genre"  , searchByGenre  , NULL, NULL        , MAINMENU_ITEM(0), MAINMENU_ITEM(2) },
-	{ "Settings"         , NULL           , NULL, settingsMenu, MAINMENU_ITEM(1), NULL             },
+	{ NOTYPE, "Search By Country", searchByCountry, NULL, NULL        , NULL            , MAINMENU_ITEM(1) },
+	{ NOTYPE, "Search By Genre"  , searchByGenre  , NULL, NULL        , MAINMENU_ITEM(0), MAINMENU_ITEM(2) },
+	{ NOTYPE, "Settings"         , NULL           , NULL, settingsMenu, MAINMENU_ITEM(1), NULL             },
 };
 
 /* Settings Menu */
 #define SETTINGSMENU_ITEM(x) &settingsMenu[x]
 static MenuItem settingsMenu[] = {
-	{ "Select Wifi"       , selectWifi      , NULL    , NULL, NULL                , SETTINGSMENU_ITEM(1) },
-	{ "Edit Wifi Password", editWifiPassword, NULL    , NULL, SETTINGSMENU_ITEM(0), SETTINGSMENU_ITEM(2) },
-	{ "Back"              , NULL            , mainMenu, NULL, SETTINGSMENU_ITEM(1), NULL                 },
+	{ NOTYPE, "Select Wifi"       , selectWifi      , NULL    , NULL, NULL                , SETTINGSMENU_ITEM(1) },
+	{ NOTYPE, "Edit Wifi Password", editWifiPassword, NULL    , NULL, SETTINGSMENU_ITEM(0), SETTINGSMENU_ITEM(2) },
+	{ NOTYPE, "Back"              , NULL            , mainMenu, NULL, SETTINGSMENU_ITEM(1), NULL                 },
 }; 
 
-static void addMenuItem(MenuItem *item, const char *mText, void *mFunc, Menu parent, Menu child, MenuItem *prev, MenuItem *next)
+static void addMenuItem(MenuItem *item, MenuType mType, const char *mText, void *mFunc, Menu parent, Menu child, MenuItem *prev, MenuItem *next)
 {
+	item->mType = mType;
 	item->mText = mText;
 	item->mFunc = mFunc;
 	item->parent = parent;
@@ -107,7 +108,7 @@ static void listStationsByCountry()
 {
 	json_object *countrycode_jobj;
 	json_object *name_jobj;
-	MenuItem *stationListItem = NULL;
+	StationsByCountryMenuItem *stationListItem = NULL;
 	char *browserData;
 	int i;
 	enum json_tokener_error jerr;
@@ -118,7 +119,7 @@ static void listStationsByCountry()
 
 	/* Clear the current menu */
 	if (menuEnv->listStationsByCountryMenu) {
-		removeMenu(menuEnv->listStationsByCountryMenu);
+		removeMenu((Menu)menuEnv->listStationsByCountryMenu);
 		menuEnv->listStationsByCountryMenu = NULL;
 	}
 
@@ -141,22 +142,30 @@ static void listStationsByCountry()
 	for (i = 0; i<json_object_array_length(menuEnv->stationsbycountry_list_jobj); i++) {
 		json_object *station_jobj;
 		json_object *name_jobj;
+		json_object *codec_jobj;
+		json_object *bitrate_jobj;
+		StationsByCountryMenuItem *sbc_item;
 		MenuItem *item;
 		MenuItem *prev;
 
 		station_jobj = json_object_array_get_idx(menuEnv->stationsbycountry_list_jobj, i);
 		json_object_object_get_ex(station_jobj, "name", &name_jobj);
-		item = malloc(sizeof(MenuItem));
+		json_object_object_get_ex(station_jobj, "codec", &codec_jobj);
+		json_object_object_get_ex(station_jobj, "bitrate", &bitrate_jobj);
+		sbc_item = malloc(sizeof(StationsByCountryMenuItem));
+		item = (MenuItem*)sbc_item;
+		sbc_item->codec = json_object_get_string(codec_jobj);
+		sbc_item->bitrate = json_object_get_int(bitrate_jobj);
 		if (stationListItem) {
-			stationListItem->next = item;
-			prev = stationListItem;
+			stationListItem->menuItem.next = item;
+			prev = (MenuItem*)stationListItem;
 		}
 		else {
 			prev = NULL;
-			menuEnv->listStationsByCountryMenu = item;
+			menuEnv->listStationsByCountryMenu = (StationsByCountryMenu)item;
 		}
-		addMenuItem(item, json_object_get_string(name_jobj), playRadioStation, mainMenu, NULL, prev, NULL);
-		stationListItem = item;
+		addMenuItem(item, STATIONSBYCOUNTRY, json_object_get_string(name_jobj), playRadioStation, mainMenu, NULL, prev, NULL);
+		stationListItem = sbc_item;
 	}
 	menuEnv->currentMenu = (Menu)menuEnv->listStationsByCountryMenu;
 
@@ -213,7 +222,7 @@ static void searchByCountry()
 			prev = NULL;
 			menuEnv->locationMenu = (LocationMenu)item;
 		}
-		addMenuItem(item, getCountryName(loc_item->countryCode), listStationsByCountry, mainMenu, NULL, prev, NULL);
+		addMenuItem(item, LOCATION, getCountryName(loc_item->countryCode), listStationsByCountry, mainMenu, NULL, prev, NULL);
 		countryListItem = loc_item;
 	}
 	menuEnv->currentMenu = (Menu)menuEnv->locationMenu;
@@ -248,7 +257,21 @@ void displayCurrentMenu()
 	int i = 1;
 
 	while (item != NULL) {
-		printf("%d  %s\n", i, item->mText);
+		printf("%d  %s", i, item->mText);
+
+		switch (item->mType) {
+			case STATIONSBYCOUNTRY: {
+				StationsByCountryMenuItem *sbc_item = (StationsByCountryMenuItem*)item;
+
+				printf(" - %s - %dkbps\n", sbc_item->codec, sbc_item->bitrate);
+				break;
+			}
+			case LOCATION:
+			case NOTYPE: {
+				printf("\n");
+			}
+		}
+
 		i++;
 		item = item->next;
 	} 

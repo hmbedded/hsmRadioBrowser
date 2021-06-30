@@ -16,7 +16,14 @@
 #ifndef _MENU_H
 #define _MENU_H
 
+typedef enum MenuType {
+	NOTYPE,
+	LOCATION,
+	STATIONSBYCOUNTRY
+} MenuType;
+
 typedef struct MenuItem {
+	MenuType mType;             // Menu type
 	const char *mText;          // Menu text
 	void (*mFunc)();            // Function to call when selected
 	struct MenuItem *parent;    // Parent menu
@@ -31,8 +38,14 @@ typedef struct LocationMenuItem {
 	MenuItem menuItem;
 	const char *countryCode;
 } LocationMenuItem;
-
 typedef LocationMenuItem* LocationMenu;
+
+typedef struct {
+	MenuItem menuItem;
+	const char *codec;
+	int bitrate;
+} StationsByCountryMenuItem;
+typedef StationsByCountryMenuItem* StationsByCountryMenu;
 
 void initMenu(void);
 void displayCurrentMenu(void);
