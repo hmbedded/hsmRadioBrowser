@@ -44,8 +44,8 @@ typedef struct {
 	MenuItem menuItem;
 	const char *codec;
 	int bitrate;
-} StationsByCountryMenuItem;
-typedef StationsByCountryMenuItem* StationsByCountryMenu;
+} StationsMenuItem;
+typedef StationsMenuItem* StationsMenu;
 
 void initMenu(void);
 void displayCurrentMenu(void);
