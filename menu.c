@@ -39,8 +39,13 @@ static MenuEnv menuEnv = &menuData;
 /* Menu Action Function Prototypes*/
 static void searchByCountry(void);
 static void searchByGenre(void);
-static void selectWifi(void);
+static void handlePreset(void);
+static void turnRadioOff(void);
+static void selectWifiNetwork(void);
 static void editWifiPassword(void);
+static void selectTimezone(void);
+static void showFirmwareVersion(void);
+static void upgradeFirmware(void);
 
 /* Fixed Menus */
 static MenuItem mainMenu[];
@@ -49,17 +54,33 @@ static MenuItem settingsMenu[];
 /* Main Menu */
 #define MAINMENU_ITEM(x) &mainMenu[x]
 static MenuItem mainMenu[] = {
-	{ NOTYPE, "Search By Country", searchByCountry, NULL, NULL        , NULL            , MAINMENU_ITEM(1) },
-	{ NOTYPE, "Search By Genre"  , searchByGenre  , NULL, NULL        , MAINMENU_ITEM(0), MAINMENU_ITEM(2) },
-	{ NOTYPE, "Settings"         , NULL           , NULL, settingsMenu, MAINMENU_ITEM(1), NULL             },
+	{ NOTYPE, "Location" , searchByCountry, NULL, NULL        , NULL             , MAINMENU_ITEM(1)  },  // Main Menu Item 0
+	{ NOTYPE, "Genre"    , searchByGenre  , NULL, NULL        , MAINMENU_ITEM(0) , MAINMENU_ITEM(2)  },  // Main Menu Item 1
+	{ NOTYPE, "Preset 1" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(1) , MAINMENU_ITEM(3)  },  // Main Menu Item 2
+	{ NOTYPE, "Preset 2" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(2) , MAINMENU_ITEM(4)  },  // Main Menu Item 3
+	{ NOTYPE, "Preset 3" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(3) , MAINMENU_ITEM(5)  },  // Main Menu Item 4
+	{ NOTYPE, "Preset 4" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(4) , MAINMENU_ITEM(6)  },  // Main Menu Item 5
+	{ NOTYPE, "Preset 5" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(5) , MAINMENU_ITEM(7)  },  // Main Menu Item 6
+	{ NOTYPE, "Preset 6" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(6) , MAINMENU_ITEM(8)  },  // Main Menu Item 7
+	{ NOTYPE, "Preset 7" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(7) , MAINMENU_ITEM(9)  },  // Main Menu Item 8
+	{ NOTYPE, "Preset 8" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(8) , MAINMENU_ITEM(10) },  // Main Menu Item 9
+	{ NOTYPE, "Preset 9" , handlePreset   , NULL, NULL        , MAINMENU_ITEM(9) , MAINMENU_ITEM(11) },  // Main Menu Item 10
+	{ NOTYPE, "Preset 10", handlePreset   , NULL, NULL        , MAINMENU_ITEM(10), MAINMENU_ITEM(12) },  // Main Menu Item 11
+	{ NOTYPE, "Preset 11", handlePreset   , NULL, NULL        , MAINMENU_ITEM(11), MAINMENU_ITEM(13) },  // Main Menu Item 12
+	{ NOTYPE, "Preset 12", handlePreset   , NULL, NULL        , MAINMENU_ITEM(12), MAINMENU_ITEM(14) },  // Main Menu Item 13
+	{ NOTYPE, "Settings" , NULL           , NULL, settingsMenu, MAINMENU_ITEM(13), MAINMENU_ITEM(15) },  // Main Menu Item 14
+	{ NOTYPE, "Off"      , turnRadioOff   , NULL, NULL        , MAINMENU_ITEM(14), NULL              },  // Main Menu Item 15
 };
 
 /* Settings Menu */
 #define SETTINGSMENU_ITEM(x) &settingsMenu[x]
 static MenuItem settingsMenu[] = {
-	{ NOTYPE, "Select Wifi"       , selectWifi      , NULL    , NULL, NULL                , SETTINGSMENU_ITEM(1) },
-	{ NOTYPE, "Edit Wifi Password", editWifiPassword, NULL    , NULL, SETTINGSMENU_ITEM(0), SETTINGSMENU_ITEM(2) },
-	{ NOTYPE, "Back"              , NULL            , mainMenu, NULL, SETTINGSMENU_ITEM(1), NULL                 },
+	{ NOTYPE, "Scan Wifi"       , selectWifiNetwork   , NULL    , NULL, NULL                , SETTINGSMENU_ITEM(1) },  // Settings Menu Item 0
+	{ NOTYPE, "Wifi Password"   , editWifiPassword    , NULL    , NULL, SETTINGSMENU_ITEM(0), SETTINGSMENU_ITEM(2) },  // Settings Menu Item 1
+	{ NOTYPE, "Timezone"        , selectTimezone      , NULL    , NULL, SETTINGSMENU_ITEM(1), SETTINGSMENU_ITEM(3) },  // Settings Menu Item 2
+	{ NOTYPE, "Version"         , showFirmwareVersion , NULL    , NULL, SETTINGSMENU_ITEM(2), SETTINGSMENU_ITEM(4) },  // Settings Menu Item 3
+	{ NOTYPE, "Firmware Upgrade", upgradeFirmware     , NULL    , NULL, SETTINGSMENU_ITEM(3), SETTINGSMENU_ITEM(5) },  // Settings Menu Item 4
+	{ NOTYPE, "Back"            , NULL                , mainMenu, NULL, SETTINGSMENU_ITEM(4), NULL                 },  // Settings Menu Item 5
 }; 
 
 static void addMenuItem(MenuItem *item, MenuType mType, const char *mText, void *mFunc, Menu parent, Menu child, MenuItem *prev, MenuItem *next)
@@ -238,27 +259,52 @@ static void searchByCountry()
 	free(browserData);
 }
 
-static void searchByGenre()
+static void searchByGenre(void)
 {
 	printf("searchByGenre: called\n");
 }
 
-static void selectWifi()
+static void handlePreset(void)
 {
-	printf("selectWifi: called\n");
+	printf("handlePreset: called\n");
 }
 
-static void editWifiPassword()
+static void turnRadioOff(void)
+{
+	printf("turnRadioOff: called\n");
+}
+
+static void selectWifiNetwork(void)
+{
+	printf("selectWifiNetwork: called\n");
+}
+
+static void editWifiPassword(void)
 {
 	printf("editWifiPassword: called\n");
 }
 
-void initMenu()
+static void selectTimezone(void)
+{
+	printf("selectTimezone: called\n");
+}
+
+static void showFirmwareVersion(void)
+{
+	printf("showFirmwareVersion: called\n");
+}
+
+static void upgradeFirmware(void)
+{
+	printf("upgradeFirmware: called\n");
+}
+
+void initMenu(void)
 {
 	menuEnv->currentMenu = mainMenu;
 }
 
-void displayCurrentMenu()
+void displayCurrentMenu(void)
 {
 	MenuItem *item = menuEnv->currentMenu;
 	int i = 1;
