@@ -19,5 +19,6 @@
 int initCountryTable(void);
 const char* getCountryName(const char *code);
 void cleanupCountryTable(void);
+_Bool isValidCountryCode(const char *cc);
 
 #endif /* _COUNTRYTABLE_H */

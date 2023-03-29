@@ -192,7 +192,7 @@ static void listStationsByCountry()
 	printf("\ncountrySelected: %d  %s\n", menuEnv->selection, getCountryName(json_object_get_string(name_jobj)));
 
 	/* Get list of countries from radio-browser in JSON format */ 
-	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/stations/bycountrycodeexact/gb");
+	browserData = getRadioBrowserData("https://nl1.api.radio-browser.info/json/stations/bycountrycodeexact/gb");
 
 	/* Build Stations Menu */
 	buildStationsMenu(browserData);
@@ -221,7 +221,7 @@ static void searchByCountry()
 	}
 
 	/* Get list of countries from radio-browser in JSON format */ 
-	browserData = getRadioBrowserData("https://fr1.api.radio-browser.info/json/countrycodes");
+	browserData = getRadioBrowserData("https://nl1.api.radio-browser.info/json/countrycodes");
 
 	/* Parse the returned JSON string */
 	menuEnv->countrycode_list_jobj = json_tokener_parse_verbose(browserData, &jerr);
@@ -236,12 +236,19 @@ static void searchByCountry()
 		LocationMenuItem *loc_item;
 		MenuItem *item;
 		MenuItem *prev;
+		const char *countryCode;
 
+		/* Get Country code and check it's valid */
 		countrycode_jobj = json_object_array_get_idx(menuEnv->countrycode_list_jobj, i);
 		json_object_object_get_ex(countrycode_jobj, "name", &name_jobj);
+		countryCode = json_object_get_string(name_jobj);
+		if (!isValidCountryCode(countryCode))
+			continue;
+
+		/* Add Country to menu */
 		loc_item = malloc(sizeof(LocationMenuItem));
 		item = (MenuItem*)loc_item;
-		loc_item->countryCode = json_object_get_string(name_jobj);
+		loc_item->countryCode = countryCode;
 		if (countryListItem) {
 			countryListItem->menuItem.next = item;
 			prev = (MenuItem*)countryListItem;
